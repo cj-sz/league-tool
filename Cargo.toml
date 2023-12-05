@@ -1,0 +1,11 @@
+[package]
+name = "league-tool"
+version = "0.1.0"
+edition = "2021"
+readme = "README.md"
+homepage = "https://github.com/cj-sz/league-tool"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+regex = "1.10.2"
