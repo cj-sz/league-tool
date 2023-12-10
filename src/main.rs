@@ -8,10 +8,10 @@ use colored::*;
 #[derive(Clone)]
 struct Team {
     name: String,
-    wins: i32,
-    losses: i32,
-    pfor: i32,
-    pagainst: i32,
+    wins: f32,
+    losses: f32,
+    pfor: f32,
+    pagainst: f32,
     pseed: i32, // Base case without previous seeding is 0
     ovr: i32,
 }
@@ -28,7 +28,6 @@ fn main() {
 
     // Seeding
     if args.len() == 4 {
-        // In this case we print seeding based on previous seeding
         teams = get_prev_seeding(&args[3], &mut teams)
     }
     teams.sort_by(|(_, t1), (_, t2)| t1.ovr.partial_cmp(&t2.ovr).unwrap());
@@ -50,10 +49,10 @@ fn populate_teams(fp: &String) -> Vec<(String, Team)> {
             if !has_mascot(&teams, &caps["mascotname"]) {
                 let newteam = Team {
                     name: String::from(&caps["teamname"]),
-                    wins: 0,
-                    losses: 0,
-                    pfor: 0,
-                    pagainst: 0,
+                    wins: 0.0,
+                    losses: 0.0,
+                    pfor: 0.0,
+                    pagainst: 0.0,
                     pseed: 0,
                     ovr: 0,
                 };
@@ -82,9 +81,9 @@ fn get_team_data(fp: &str, teams: &mut Vec<(String, Team)>) -> Vec<(String, Team
             // TODO: Make this more efficient
             // Winning team
             if let Some((_, wteam)) = teams.iter_mut().find(|(mascot, _)| mascot == &caps["wmascot"]) {
-                wteam.wins += 1;
+                wteam.wins += 1.0;
                 // "For" points
-                match &caps["wscore"].parse::<i32>() {
+                match &caps["wscore"].parse::<f32>() {
                     Err(why) => {
                         eprintln!("Couldn't parse the score {} for team {} in {}: {}", &caps["wscore"], &caps["wmascot"], fp, why);
                         exit(1);
@@ -94,7 +93,7 @@ fn get_team_data(fp: &str, teams: &mut Vec<(String, Team)>) -> Vec<(String, Team
                     }
                 }
                 // "Against" points
-                match &caps["lscore"].parse::<i32>() {
+                match &caps["lscore"].parse::<f32>() {
                     Err(why) => {
                         eprintln!("Couldn't parse the score {} for team {} in {}: {}", &caps["lscore"], &caps["lmascot"], fp, why);
                         exit(1);
@@ -110,9 +109,9 @@ fn get_team_data(fp: &str, teams: &mut Vec<(String, Team)>) -> Vec<(String, Team
             }
             // Losing team
             if let Some((_, lteam)) = teams.iter_mut().find(|(mascot, _)| mascot == &caps["lmascot"]) {
-                lteam.losses += 1;
+                lteam.losses += 1.0;
                 // "For" points
-                match &caps["wscore"].parse::<i32>() {
+                match &caps["wscore"].parse::<f32>() {
                     Err(why) => {
                         eprintln!("Couldn't parse the score {} for team {} in {}: {}", &caps["wscore"], &caps["wmascot"], fp, why);
                         exit(1);
@@ -122,7 +121,7 @@ fn get_team_data(fp: &str, teams: &mut Vec<(String, Team)>) -> Vec<(String, Team
                     }
                 }
                 // "Against" points
-                match &caps["lscore"].parse::<i32>() {
+                match &caps["lscore"].parse::<f32>() {
                     Err(why) => {
                         eprintln!("Couldn't parse the score {} for team {} in {}: {}", &caps["lscore"], &caps["lmascot"], fp, why);
                         exit(1);
@@ -137,14 +136,13 @@ fn get_team_data(fp: &str, teams: &mut Vec<(String, Team)>) -> Vec<(String, Team
     }
     // Recompute ovr for all teams
     // TODO: Make this the "classic" seeding method and add team rank later
-    // TODO: There has to be a better way to type this conversion. Maybe restructure the Team struct?
     for (_, team) in teams.iter_mut() {
-        team.ovr = ((((team.wins as f32) / ((team.wins as f32) + (team.losses as f32))) + ((team.pfor as f32) / (team.pagainst as f32))) * 100.0) as i32;
+        team.ovr = (((team.wins / (team.wins + team.losses)) + (team.pfor / team.pagainst)) * 100.0) as i32;
     }
     teams.to_vec()
 }
 
-// Assign prev seeding to teams, if it exists
+// Assign prev seeding to teams, if it exists. Otherwise remains 0.
 fn get_prev_seeding (fp: &str, teams: &mut Vec<(String, Team)>) -> Vec<(String, Team)> {
     let rseed = Regex::new(r"(?<seed>\d+)\.\s+(?<teamname>[A-z]+)\s+(?<mascotname>[A-z]+)").unwrap();
     let file = File::open(&fp).expect(&format!("Couldn't open previous seeding file {}", fp));
@@ -173,7 +171,6 @@ fn get_prev_seeding (fp: &str, teams: &mut Vec<(String, Team)>) -> Vec<(String, 
 
 // Prints seeding, data, and deltas (if applicable)
 // Assumes the vector passed in is sorted by OVR // TODO: Implement for non-Classic seeding
-// TODO: Abs val the delta; finish the full string; add colors
 fn result(teams: &mut Vec<(String, Team)>) -> () {
     let mut i: i32 = 1;
     for (mascot, team) in teams.iter() {
@@ -181,11 +178,10 @@ fn result(teams: &mut Vec<(String, Team)>) -> () {
         let sseed = format!("{}.", i);
         let wl = format!("{}-{}", team.wins, team.losses);
         let pfa = format!("{}-{}", team.pfor, team.pagainst);
-        // TODO same redundant fix as needed above. change typing in the Team struct
-        let wpct = format!("% {:.3}", (team.wins as f32) / ((team.wins as f32) + (team.losses as f32)));
-        let far = format!("F/A% {:.3}", (team.pfor as f32) / (team.pagainst as f32));
+        let wpct = format!("% {:.3}", team.wins / (team.wins + team.losses));
+        let far = format!("F/A% {:.3}", team.pfor / team.pagainst);
         let ovr = format!("OVR: {:.1}", team.ovr);
-        let ppg = format!("PPG: {:.1}", (team.pfor as f32) / ((team.wins as f32) + (team.losses as f32)));
+        let ppg = format!("PPG: {:.1}", team.pfor / (team.wins + team.losses));
         let d = i - team.pseed;
         if team.pseed == 0 || d == 0 {
             sdelta = "(-)".normal();
