@@ -48,11 +48,11 @@ If providing this, simply copy and paste exactly what is printed to the terminal
 
 Notice, without a previous seeding file we would get something like this (see `make ex` for details):
 
-![no-seeding-image](examples/images/no-seeding.png)
+![no-seeding-image](Images/no-seeding.png)
 
 But with some previous seeding we get interesting delta statistics like this:
 
-![seeding-image](examples/images/seeding.png)
+![seeding-image](Images/seeding.png)
 
 ## Roadmap
 
