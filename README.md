@@ -30,7 +30,7 @@ Your team file should have teams listed in the format
 
 `<TeamName> <MascotName>`
 
-with each team separated by a newline. To differentiate between the team name and mascot name, separate the two with any desired amount of non-newline whitespace. As a consequence if your team or mascot contains two different words, they must be kept together (for example "Los Angeles Lakers" would cause the tool to think your team is "Los" and mascot is "Angeles", so in your team file format this as "LosAngeles Lakers"). For now, teams are displayed in the same fashion in the output.
+with each team separated by a newline. To differentiate between the team name and mascot name, separate the two with whitespace. As a consequence if your team or mascot contains two different words, they must be kept together (for example "Los Angeles Lakers" would cause the tool to think your team is "Los" and mascot is "Angeles", so in your team file format this as "LosAngeles Lakers"). For now, teams are displayed in the same fashion in the output.
 
 ### Game File
 
@@ -59,4 +59,4 @@ But with some previous seeding we get interesting delta statistics like this:
 - Add support for the official [team ranking algorithm](https://www.math.umd.edu/~immortal/MATH401/book/ch_team_ranking.pdf) (this is a long term goal)
 - More descriptive statistics, and specific descriptive statistics for a given team or set of teams
 - Support ties, overtime statistics, and other interesting stuff
-- See the code for other minor TODOs!s
+- See the code for other minor TODOs!
