@@ -86,7 +86,7 @@ fn get_team_data(fp: &str, teams: &mut Vec<(String, Team)>) -> Vec<(String, Team
                 // "For" points
                 match &caps["wscore"].parse::<i32>() {
                     Err(why) => {
-                        eprintln!("Couldn't parse the score {} for team {} in {}", &caps["wscore"], &caps["wmascot"], fp);
+                        eprintln!("Couldn't parse the score {} for team {} in {}: {}", &caps["wscore"], &caps["wmascot"], fp, why);
                         exit(1);
                     }
                     Ok(score) => {
@@ -96,7 +96,7 @@ fn get_team_data(fp: &str, teams: &mut Vec<(String, Team)>) -> Vec<(String, Team
                 // "Against" points
                 match &caps["lscore"].parse::<i32>() {
                     Err(why) => {
-                        eprintln!("Couldn't parse the score {} for team {} in {}", &caps["lscore"], &caps["lmascot"], fp);
+                        eprintln!("Couldn't parse the score {} for team {} in {}: {}", &caps["lscore"], &caps["lmascot"], fp, why);
                         exit(1);
                     }
                     Ok(score) => {
@@ -114,7 +114,7 @@ fn get_team_data(fp: &str, teams: &mut Vec<(String, Team)>) -> Vec<(String, Team
                 // "For" points
                 match &caps["wscore"].parse::<i32>() {
                     Err(why) => {
-                        eprintln!("Couldn't parse the score {} for team {} in {}", &caps["wscore"], &caps["wmascot"], fp);
+                        eprintln!("Couldn't parse the score {} for team {} in {}: {}", &caps["wscore"], &caps["wmascot"], fp, why);
                         exit(1);
                     }
                     Ok(score) => {
@@ -124,7 +124,7 @@ fn get_team_data(fp: &str, teams: &mut Vec<(String, Team)>) -> Vec<(String, Team
                 // "Against" points
                 match &caps["lscore"].parse::<i32>() {
                     Err(why) => {
-                        eprintln!("Couldn't parse the score {} for team {} in {}", &caps["lscore"], &caps["lmascot"], fp);
+                        eprintln!("Couldn't parse the score {} for team {} in {}: {}", &caps["lscore"], &caps["lmascot"], fp, why);
                         exit(1);
                     }
                     Ok(score) => {
@@ -138,7 +138,7 @@ fn get_team_data(fp: &str, teams: &mut Vec<(String, Team)>) -> Vec<(String, Team
     // Recompute ovr for all teams
     // TODO: Make this the "classic" seeding method and add team rank later
     // TODO: There has to be a better way to type this conversion. Maybe restructure the Team struct?
-    for (mascot, team) in teams.iter_mut() {
+    for (_, team) in teams.iter_mut() {
         team.ovr = ((((team.wins as f32) / ((team.wins as f32) + (team.losses as f32))) + ((team.pfor as f32) / (team.pagainst as f32))) * 100.0) as i32;
     }
     teams.to_vec()
@@ -156,7 +156,7 @@ fn get_prev_seeding (fp: &str, teams: &mut Vec<(String, Team)>) -> Vec<(String, 
             if let Some((_, team)) = teams.iter_mut().find(|(mascot, _)| mascot == &caps["mascotname"]) {
                 match &caps["seed"].parse::<i32>() {
                     Err(why) => {
-                        eprintln!("Couldn't parse the seed {} for team {} in {}", &caps["seed"], &caps["mascotname"], fp);
+                        eprintln!("Couldn't parse the seed {} for team {} in {}: {}", &caps["seed"], &caps["mascotname"], fp, why);
                         exit(1);
                     }
                     Ok(seed) => team.pseed = *seed,
@@ -177,7 +177,7 @@ fn get_prev_seeding (fp: &str, teams: &mut Vec<(String, Team)>) -> Vec<(String, 
 fn result(teams: &mut Vec<(String, Team)>) -> () {
     let mut i: i32 = 1;
     for (mascot, team) in teams.iter() {
-        let mut sdelta: ColoredString;
+        let sdelta: ColoredString;
         let sseed = format!("{}.", i);
         let wl = format!("{}-{}", team.wins, team.losses);
         let pfa = format!("{}-{}", team.pfor, team.pagainst);
@@ -185,17 +185,17 @@ fn result(teams: &mut Vec<(String, Team)>) -> () {
         let wpct = format!("% {:.3}", (team.wins as f32) / ((team.wins as f32) + (team.losses as f32)));
         let far = format!("F/A% {:.3}", (team.pfor as f32) / (team.pagainst as f32));
         let ovr = format!("OVR: {:.1}", team.ovr);
-        let ppg = format!("{:.1}", (team.pfor as f32) / ((team.wins as f32) + (team.losses as f32)));
+        let ppg = format!("PPG: {:.1}", (team.pfor as f32) / ((team.wins as f32) + (team.losses as f32)));
         let d = i - team.pseed;
         if team.pseed == 0 || d == 0 {
             sdelta = "(-)".normal();
         } else if d < 0 {
-            sdelta = format!("(▼ {})", d).red();
+            sdelta = format!("(▲ {})", -1 * d).green();
         } else {
-            sdelta = format!("(▲ {})", d).green();
+            sdelta = format!("(▼ {})", d).red();
         }
         // TODO: Replace hardcoded widths with variables based on max length of possible args
-        println!("{:<4} {:<15} {:<15} {:<7} {:<5} {:<9} {:<8} {:<8} {:<8}", sseed.magenta(), team.name, mascot, sdelta, wl.blue(), pfa.blue(), wpct.cyan(), far.cyan(), ovr.green());
+        println!("{:<4} {:<20} {:<20} {:<12} {:<12} {:<12} {:<12} {:<12} {:<12} {:<12}", sseed.magenta(), team.name, mascot, sdelta, wl.blue(), pfa.blue(), wpct.cyan(), far.cyan(), ppg.cyan(), ovr.green());
         i += 1;
     }
 }

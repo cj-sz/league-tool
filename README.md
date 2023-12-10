@@ -22,6 +22,8 @@ To run the tool, use
 
 Your files need to have specific formats (see below). If provided, a seeding file allows the tool to provide more descriptive statistics about changes in your league's seeding from the last time you ran the tool. This file is optional, so omitting it will simply provide a seeding list without any delta statistics.
 
+To see example functionality, run `make ex`. You can also view the files in `examples/` for proper file formatting.
+
 ### Team File
 
 Your team file should have teams listed in the format
@@ -48,5 +50,5 @@ If providing this, simply copy and paste exactly what is printed to the terminal
 
 - Add support for the official [team ranking algorithm](https://www.math.umd.edu/~immortal/MATH401/book/ch_team_ranking.pdf) (this is a long term goal)
 - More descriptive statistics, and specific descriptive statistics for a given team or set of teams
-- Support ties
+- Support ties, overtime statistics, and other interesting stuff
 - See the code for other minor TODOs!s

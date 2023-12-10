@@ -1,0 +1,19 @@
+This text doesn't get grabbed! These first 7 games were played to generate the seeding you'll find in seeding.txt. The games after changed the seeding! Try running make ex.
+1. Lakers def. Wizards 109-90
+2. Lakers def. Mavericks 110-107
+3. Wizards def. Mavericks 90-89
+4. WithAFiveWordMascot def. Lakers 124-92
+5. Mavericks def. Lakers 119-104
+6. WithAFiveWordMascot def. Wizards 101-75
+7. Mavericks def. Wizards 100-90
+
+Now everything after was played after the first seeding was generated. Notice the deltas!
+
+8. Wizards def. WithAFiveWordMascot 130-120
+9. Lakers def. Mavericks 89-84
+10. Mavericks def. Wizards 101-80
+11. Mavericks def. WithAFiveWordMascot 121-111
+12. Wizards def. WithAFiveWordMascot 153-120 F/OT
+13. Wizards def. Lakers 100-90 F/2OT
+
+Support for overtime stuff is coming later! For now, adding that in doesn't bother anything.

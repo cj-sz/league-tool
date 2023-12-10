@@ -1,0 +1,4 @@
+1.   SomeTeam             WithAFiveWordMascot  (-)     2-0   225-167   % 1.000  F/A% 1.347 OVR: 234
+2.   Dallas               Mavericks            (-)     2-2   415-394   % 0.500  F/A% 1.053 OVR: 155
+3.   LosAngeles           Lakers               (-)     2-2   415-440   % 0.500  F/A% 0.943 OVR: 144
+4.   Washington           Wizards              (-)     1-3   345-399   % 0.250  F/A% 0.865 OVR: 111
