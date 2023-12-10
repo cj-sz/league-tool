@@ -46,6 +46,14 @@ The tool does not yet support tied games.
 
 If providing this, simply copy and paste exactly what is printed to the terminal after running the league tool into a text document and do not make any changes. It then works immediately!
 
+Notice, without a previous seeding file we would get something like this (see `make ex` for details):
+
+![no-seeding-image](examples/images/no-seeding.png)
+
+But with some previous seeding we get interesting delta statistics like this:
+
+![seeding-image](examples/images/seeding.png)
+
 ## Roadmap
 
 - Add support for the official [team ranking algorithm](https://www.math.umd.edu/~immortal/MATH401/book/ch_team_ranking.pdf) (this is a long term goal)

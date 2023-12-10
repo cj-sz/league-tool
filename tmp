@@ -1,0 +1,14 @@
+cargo build
+Without some previous seeding statistics:
+target/debug/league-tool examples/teams.txt examples/games.txt
+1.   Dallas               Mavericks            (-)          4-3          721-674      % 0.571      F/A% 1.070   PPG: 103.0   OVR: 164    
+2.   Washington           Wizards              (-)          4-4          808-830      % 0.500      F/A% 0.973   PPG: 101.0   OVR: 147    
+3.   LosAngeles           Lakers               (-)          3-3          594-624      % 0.500      F/A% 0.952   PPG: 99.0    OVR: 145    
+4.   SomeTeam             WithAFiveWordMascot  (-)          2-3          576-571      % 0.400      F/A% 1.009   PPG: 115.2   OVR: 140    
+
+And some more descriptive statistics if we had given it a previous seeding beforehand:
+target/debug/league-tool examples/teams.txt examples/games.txt examples/seeding.txt
+1.   Dallas               Mavericks            (▲ 1)        4-3          721-674      % 0.571      F/A% 1.070   PPG: 103.0   OVR: 164    
+2.   Washington           Wizards              (▲ 2)        4-4          808-830      % 0.500      F/A% 0.973   PPG: 101.0   OVR: 147    
+3.   LosAngeles           Lakers               (-)          3-3          594-624      % 0.500      F/A% 0.952   PPG: 99.0    OVR: 145    
+4.   SomeTeam             WithAFiveWordMascot  (▼ 3)        2-3          576-571      % 0.400      F/A% 1.009   PPG: 115.2   OVR: 140    
