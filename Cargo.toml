@@ -9,3 +9,4 @@ homepage = "https://github.com/cj-sz/league-tool"
 
 [dependencies]
 regex = "1.10.2"
+colored = "2.0.0"
