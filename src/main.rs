@@ -159,8 +159,9 @@ fn result(teams: &mut Vec<(String, Team)>) -> () {
     // Define widths
     let seed_width: usize = (digits(teams.len() as i32, 10) + 2) as usize;
     // TODO: Get rid of this duplicate code
-    // TODO: Turn all of these additions into nums
-    let name_width: usize = max_field_width(&teams, |&(_, ref team)| team.name.clone());
+    let name_width: usize = (teams.iter().fold(0, |cur_max, (_, team)| {
+        cur_max.max(team.name.len())
+    }) + 1) as usize;
     let mascot_width: usize = (teams.iter().fold(0, |cur_max, (mascot, _)| {
         cur_max.max(mascot.len())
     }) + 1) as usize;
@@ -222,15 +223,4 @@ fn digits(mut num: i32, base: i32) -> i32 {
         ret += 1;
     }
     ret
-}
-
-// TODO: Adapt this for other possible fields above
-fn max_field_width<T, F>(teams: &[(String, T)], field: F) -> usize where F: Fn(&(String, T)) -> String {
-    let max_len: usize = teams.iter().fold(0, |cur_max: usize , t: &(String, T)| {
-        cur_max.max(field(t).len().try_into().unwrap())
-    });
-    let min_len: usize = teams.iter().fold(usize::MAX, |cur_min: usize, t: &(String, T)| {
-            cur_min.min(field(t).len().try_into().unwrap())
-    });
-    2 * max_len - min_len
 }
