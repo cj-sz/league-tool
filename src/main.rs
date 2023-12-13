@@ -73,56 +73,46 @@ fn populate_teams(fp: &String) -> Vec<(String, Team)> {
 
 // Requires a nonempty vector of (mascot, team data) tuples. Errors if a team
 // with a nonexistent mascot is present.
+// TODO: Hard enforce that if scores =, must say "tie", and if !=, must say "def."
 fn get_team_data(fp: &str, teams: &mut Vec<(String, Team)>) -> Vec<(String, Team)> {
-    let rgame = Regex::new(r"(?<gamenum>\d+)\. (?<leftmascot>[A-z]+) (def\.|tied) (?<rightmascot>[A-z]+) (?<leftscore>\d+)-(?<rightscore>\d+)").unwrap();
+    let rgame = Regex::new(r"(?<gamenum>\d+)\. (?<leftmascot>[A-z]+) (def\.|tie) (?<rightmascot>[A-z]+) (?<leftscore>\d+)-(?<rightscore>\d+)").unwrap();
     let file = File::open(&fp).expect(&format!("Couldn't open game history file {}", fp));
     let reader = BufReader::new(file);
     let mut linum = 1;
-    // This can't be in a cloned vector because the right team then isn't actually modified
-    let mut teamsc = teams.clone();
     for line in reader.lines() {
         let txt = line.expect(&format!("Couldn't read line {} in {}", linum, &fp));
         if let Some(caps) = rgame.captures(&txt) {
-            let Some(leftteam) = teams.iter_mut().find(|(mascot, _)| mascot == &caps["leftmascot"]) 
-                else {
-                    eprintln!("No team with name {} exists!", &caps["leftmascot"]); 
-                    exit(1);
-                }; 
-            let Some(rightteam) = teamsc.iter_mut().find(|(mascot, _)| mascot == &caps["rightmascot"]) 
-                else {
-                    eprintln!("No team with name {} exists!", &caps["rightmascot"]); 
-                    exit(1);
-                };
-            match &caps["leftscore"].parse::<f32>() {
-                Err(why) => {
-                    eprintln!("Couldn't parse the score {} for team {} in {}: {}", &caps["leftscore"], &caps["leftmascot"], fp, why);
-                    exit(1);
+            let leftscore_result = caps["leftscore"].parse::<f32>();
+            let rightscore_result = caps["rightscore"].parse::<f32>();
+            if leftscore_result.is_err() || rightscore_result.is_err() {
+                eprintln!("Couldn't parse scores on line {} of {}", linum, fp);
+                exit(1);
+            }
+            let leftscore = leftscore_result.unwrap();
+            let rightscore = rightscore_result.unwrap();
+            if let Some((_, leftteam)) = teams.iter_mut().find(|(mascot, _)| mascot == &caps["leftmascot"]) {
+                if leftscore == rightscore {
+                    leftteam.ties += 1.0;
+                } else {
+                    leftteam.wins += 1.0;
                 }
-                Ok(score) => {
-                    leftteam.1.pfor += score;
-                    rightteam.1.pagainst += score;
-                }
-            };
-            match &caps["rightscore"].parse::<f32>() {
-                Err(why) => {
-                    eprintln!("Couldn't parse the score {} for team {} in {}: {}", &caps["rightscore"], &caps["rightmascot"], fp, why);
-                    exit(1);
-                }
-                Ok(score) => {
-                    rightteam.1.pfor += score;
-                    leftteam.1.pagainst += score;
-                }
-            };
-            println!("{:?} {:?}", &caps["leftscore"].parse::<f32>(), &caps["rightscore"].parse::<f32>());
-            if &caps["leftscore"].parse::<f32>() == &caps["rightscore"].parse::<f32>() {
-                leftteam.1.ties += 1.0;
-                rightteam.1.ties += 1.0;
+                leftteam.pfor += leftscore;
+                leftteam.pagainst += rightscore;
             } else {
-                println!("{} defeated {}", leftteam.0, rightteam.0);
-                leftteam.1.wins += 1.0;
-                println!("{} losses: {}", rightteam.0, rightteam.1.losses);
-                rightteam.1.losses += 1.0;
-                println!("{} losses: {}", rightteam.0, rightteam.1.losses);
+                eprintln!("Team {} does not exist on line {} of {}", &caps["leftmascot"], linum, fp);
+                exit(1);
+            }
+            if let Some((_, rightteam)) = teams.iter_mut().find(|(mascot, _)| mascot == &caps["rightmascot"]) {
+                if leftscore == rightscore {
+                    rightteam.ties += 1.0;
+                } else {
+                    rightteam.losses += 1.0;
+                }
+                rightteam.pfor += rightscore;
+                rightteam.pagainst += leftscore;
+            } else {
+                eprintln!("Team {} does not exist on line {} of {}", &caps["rightmascot"], linum, fp);
+                exit(1);
             }
         }
         linum += 1;

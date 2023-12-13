@@ -15,5 +15,7 @@ Now everything after was played after the first seeding was generated. Notice th
 11. Mavericks def. WithAFiveWordMascot 121-111
 12. Wizards def. WithAFiveWordMascot 153-120 F/OT
 13. Wizards def. Lakers 100-90 F/2OT
+14. Mavericks tie Wizards 103-103
+15. Wizards def. WithAFiveWordMascot 109-100
 
 Support for overtime stuff is coming later! For now, adding that in doesn't bother anything.
