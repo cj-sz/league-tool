@@ -156,16 +156,48 @@ fn get_prev_seeding (fp: &str, teams: &mut Vec<(String, Team)>) -> Vec<(String, 
 // Assumes the vector passed in is sorted by OVR // TODO: Implement for non-Classic seeding
 fn result(teams: &mut Vec<(String, Team)>) -> () {
     let mut i: i32 = 1;
+    // Define widths
+    let seed_width: usize = (digits(teams.len() as i32, 10) + 2) as usize;
+    // TODO: Get rid of this duplicate code
+    // TODO: Turn all of these additions into nums
+    let name_width: usize = max_field_width(&teams, |&(_, ref team)| team.name.clone());
+    let mascot_width: usize = (teams.iter().fold(0, |cur_max, (mascot, _)| {
+        cur_max.max(mascot.len())
+    }) + 1) as usize;
+    let wlt_width: usize = (teams.iter().fold(0, |cur_max, (_, team)| {
+        let wlt: String = format!("{}-{}-{}", team.wins, team.losses, team.ties);
+        cur_max.max(wlt.len())
+    }) + 1) as usize;
+    let pfa_width: usize = (teams.iter().fold(0, |cur_max, (_, team)| {
+        let pfa: String = format!("{}-{}", team.pfor, team.pagainst);
+        cur_max.max(pfa.len())
+    }) + 1) as usize;
+    let wpct_width: usize = (teams.iter().fold(0, |cur_max, (_, team)| {
+        let wpct: String = format!("% {:.3}", team.wins / (team.wins + team.losses + team.ties));
+        cur_max.max(wpct.len())
+    }) + 1) as usize;
+    let far_width: usize = (teams.iter().fold(0, |cur_max, (_, team)| {
+        let far: String = format!("F/A% {:.3}", team.pfor / team.pagainst);
+        cur_max.max(far.len())
+    }) + 1) as usize;
+    let ppg_width: usize = (teams.iter().fold(0, |cur_max, (_, team)| {
+        let ppg: String = format!("PPG: {:.1}", team.pfor / (team.wins + team.losses + team.ties));
+        cur_max.max(ppg.len())
+    }) + 1) as usize;
+    let ovr_width: usize = (teams.iter().fold(0, |cur_max, (_, team)| {
+        let ovr: String = format!("OVR: {:.1}", team.ovr);
+        cur_max.max(ovr.len())
+    }) + 1) as usize;
     for (mascot, team) in teams.iter() {
         let sdelta: ColoredString;
-        let sseed = format!("{}.", i);
-        let wlt = format!("{}-{}-{}", team.wins, team.losses, team.ties);
-        let pfa = format!("{}-{}", team.pfor, team.pagainst);
-        let wpct = format!("% {:.3}", team.wins / (team.wins + team.losses + team.ties));
-        let far = format!("F/A% {:.3}", team.pfor / team.pagainst);
-        let ovr = format!("OVR: {:.1}", team.ovr);
-        let ppg = format!("PPG: {:.1}", team.pfor / (team.wins + team.losses + team.ties));
-        let d = i - team.pseed;
+        let sseed: String = format!("{}.", i);
+        let wlt: String = format!("{}-{}-{}", team.wins, team.losses, team.ties);
+        let pfa: String = format!("{}-{}", team.pfor, team.pagainst);
+        let wpct: String = format!("% {:.3}", team.wins / (team.wins + team.losses + team.ties));
+        let far: String = format!("F/A% {:.3}", team.pfor / team.pagainst);
+        let ppg: String = format!("PPG: {:.1}", team.pfor / (team.wins + team.losses + team.ties));
+        let ovr: String = format!("OVR: {:.1}", team.ovr);
+        let d: i32 = i - team.pseed;
         if team.pseed == 0 || d == 0 {
             sdelta = "(-)".normal();
         } else if d < 0 {
@@ -173,12 +205,32 @@ fn result(teams: &mut Vec<(String, Team)>) -> () {
         } else {
             sdelta = format!("(▼ {})", d).red();
         }
-        // TODO: Replace hardcoded widths with variables based on max length of possible args
-        println!("{:<4} {:<20} {:<20} {:<12} {:<16} {:<12} {:<12} {:<12} {:<12} {:<12}", sseed.magenta(), team.name, mascot, sdelta, wlt.blue(), pfa.blue(), wpct.cyan(), far.cyan(), ppg.cyan(), ovr.green());
+        // TODO: Replace hardcoded delta width
+        println!("{:<seed_width$} {:<name_width$} {:<mascot_width$} {:<12} {:<wlt_width$} {:<pfa_width$} {:<wpct_width$} {:<far_width$} {:<ppg_width$} {:<ovr_width$}", sseed.magenta(), team.name, mascot, sdelta, wlt.blue(), pfa.blue(), wpct.cyan(), far.cyan(), ppg.cyan(), ovr.green());
         i += 1;
     }
 }
 
 fn has_mascot(teams: &Vec<(String, Team)>, target_mascot: &str) -> bool {
     teams.iter().any(|(mascot, _)| mascot == target_mascot)
+}
+
+fn digits(mut num: i32, base: i32) -> i32 {
+    let mut ret: i32 = 0;
+    while num != 0 {
+        num /= base;
+        ret += 1;
+    }
+    ret
+}
+
+// TODO: Adapt this for other possible fields above
+fn max_field_width<T, F>(teams: &[(String, T)], field: F) -> usize where F: Fn(&(String, T)) -> String {
+    let max_len: usize = teams.iter().fold(0, |cur_max: usize , t: &(String, T)| {
+        cur_max.max(field(t).len().try_into().unwrap())
+    });
+    let min_len: usize = teams.iter().fold(usize::MAX, |cur_min: usize, t: &(String, T)| {
+            cur_min.min(field(t).len().try_into().unwrap())
+    });
+    2 * max_len - min_len
 }
