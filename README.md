@@ -40,7 +40,7 @@ Your game file should have games listed in the following format:
 
 Don't forget the `.` after the game number and the `-` with no whitespace in between the points! Also, take note: the winning team must be listed before the losing team, and likewise for the respective points. Games should be separated by a newline.
 
-The tool does not yet support tied games.
+For tied games, replace `def.` with `tied`. Order of teams and scores should remain consistent.
 
 ### Seeding File (Optional)
 
@@ -58,5 +58,5 @@ But with some previous seeding we get interesting delta statistics like this:
 
 - Add support for the official [team ranking algorithm](https://www.math.umd.edu/~immortal/MATH401/book/ch_team_ranking.pdf) (this is a long term goal)
 - More descriptive statistics, and specific descriptive statistics for a given team or set of teams
-- Support ties, overtime statistics, and other interesting stuff
+- Overtime statistics, and other interesting stuff
 - See the code for other minor TODOs!

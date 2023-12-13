@@ -6,10 +6,12 @@ use regex::Regex;
 use colored::*;
 
 #[derive(Clone)]
+#[derive(PartialEq)]
 struct Team {
     name: String,
     wins: f32,
     losses: f32,
+    ties: f32,
     pfor: f32,
     pagainst: f32,
     pseed: i32, // Base case without previous seeding is 0
@@ -51,6 +53,7 @@ fn populate_teams(fp: &String) -> Vec<(String, Team)> {
                     name: String::from(&caps["teamname"]),
                     wins: 0.0,
                     losses: 0.0,
+                    ties: 0.0,
                     pfor: 0.0,
                     pagainst: 0.0,
                     pseed: 0,
@@ -71,65 +74,55 @@ fn populate_teams(fp: &String) -> Vec<(String, Team)> {
 // Requires a nonempty vector of (mascot, team data) tuples. Errors if a team
 // with a nonexistent mascot is present.
 fn get_team_data(fp: &str, teams: &mut Vec<(String, Team)>) -> Vec<(String, Team)> {
-    let rgame = Regex::new(r"(?<gamenum>\d+)\. (?<wmascot>[A-z]+) def\. (?<lmascot>[A-z]+) (?<wscore>\d+)-(?<lscore>\d+)").unwrap();
+    let rgame = Regex::new(r"(?<gamenum>\d+)\. (?<leftmascot>[A-z]+) (def\.|tied) (?<rightmascot>[A-z]+) (?<leftscore>\d+)-(?<rightscore>\d+)").unwrap();
     let file = File::open(&fp).expect(&format!("Couldn't open game history file {}", fp));
     let reader = BufReader::new(file);
-    let mut linum: i32 = 1;
+    let mut linum = 1;
+    // This can't be in a cloned vector because the right team then isn't actually modified
+    let mut teamsc = teams.clone();
     for line in reader.lines() {
         let txt = line.expect(&format!("Couldn't read line {} in {}", linum, &fp));
         if let Some(caps) = rgame.captures(&txt) {
-            // TODO: Make this more efficient
-            // Winning team
-            if let Some((_, wteam)) = teams.iter_mut().find(|(mascot, _)| mascot == &caps["wmascot"]) {
-                wteam.wins += 1.0;
-                // "For" points
-                match &caps["wscore"].parse::<f32>() {
-                    Err(why) => {
-                        eprintln!("Couldn't parse the score {} for team {} in {}: {}", &caps["wscore"], &caps["wmascot"], fp, why);
-                        exit(1);
-                    }
-                    Ok(score) => {
-                        wteam.pfor += score;
-                    }
+            let Some(leftteam) = teams.iter_mut().find(|(mascot, _)| mascot == &caps["leftmascot"]) 
+                else {
+                    eprintln!("No team with name {} exists!", &caps["leftmascot"]); 
+                    exit(1);
+                }; 
+            let Some(rightteam) = teamsc.iter_mut().find(|(mascot, _)| mascot == &caps["rightmascot"]) 
+                else {
+                    eprintln!("No team with name {} exists!", &caps["rightmascot"]); 
+                    exit(1);
+                };
+            match &caps["leftscore"].parse::<f32>() {
+                Err(why) => {
+                    eprintln!("Couldn't parse the score {} for team {} in {}: {}", &caps["leftscore"], &caps["leftmascot"], fp, why);
+                    exit(1);
                 }
-                // "Against" points
-                match &caps["lscore"].parse::<f32>() {
-                    Err(why) => {
-                        eprintln!("Couldn't parse the score {} for team {} in {}: {}", &caps["lscore"], &caps["lmascot"], fp, why);
-                        exit(1);
-                    }
-                    Ok(score) => {
-                        wteam.pagainst += score;
-                    }
+                Ok(score) => {
+                    leftteam.1.pfor += score;
+                    rightteam.1.pagainst += score;
                 }
-
+            };
+            match &caps["rightscore"].parse::<f32>() {
+                Err(why) => {
+                    eprintln!("Couldn't parse the score {} for team {} in {}: {}", &caps["rightscore"], &caps["rightmascot"], fp, why);
+                    exit(1);
+                }
+                Ok(score) => {
+                    rightteam.1.pfor += score;
+                    leftteam.1.pagainst += score;
+                }
+            };
+            println!("{:?} {:?}", &caps["leftscore"].parse::<f32>(), &caps["rightscore"].parse::<f32>());
+            if &caps["leftscore"].parse::<f32>() == &caps["rightscore"].parse::<f32>() {
+                leftteam.1.ties += 1.0;
+                rightteam.1.ties += 1.0;
             } else {
-                eprintln!("Team {} does not exist in {}", &caps["wmascot"], fp);
-                exit(1);
-            }
-            // Losing team
-            if let Some((_, lteam)) = teams.iter_mut().find(|(mascot, _)| mascot == &caps["lmascot"]) {
-                lteam.losses += 1.0;
-                // "For" points
-                match &caps["wscore"].parse::<f32>() {
-                    Err(why) => {
-                        eprintln!("Couldn't parse the score {} for team {} in {}: {}", &caps["wscore"], &caps["wmascot"], fp, why);
-                        exit(1);
-                    }
-                    Ok(score) => {
-                        lteam.pagainst += score;
-                    }
-                }
-                // "Against" points
-                match &caps["lscore"].parse::<f32>() {
-                    Err(why) => {
-                        eprintln!("Couldn't parse the score {} for team {} in {}: {}", &caps["lscore"], &caps["lmascot"], fp, why);
-                        exit(1);
-                    }
-                    Ok(score) => {
-                        lteam.pfor += score;
-                    }
-                }
+                println!("{} defeated {}", leftteam.0, rightteam.0);
+                leftteam.1.wins += 1.0;
+                println!("{} losses: {}", rightteam.0, rightteam.1.losses);
+                rightteam.1.losses += 1.0;
+                println!("{} losses: {}", rightteam.0, rightteam.1.losses);
             }
         }
         linum += 1;
@@ -137,7 +130,7 @@ fn get_team_data(fp: &str, teams: &mut Vec<(String, Team)>) -> Vec<(String, Team
     // Recompute ovr for all teams
     // TODO: Make this the "classic" seeding method and add team rank later
     for (_, team) in teams.iter_mut() {
-        team.ovr = (((team.wins / (team.wins + team.losses)) + (team.pfor / team.pagainst)) * 100.0) as i32;
+        team.ovr = (((team.wins / (team.wins + team.losses + team.ties)) + (team.pfor / team.pagainst)) * 100.0) as i32;
     }
     teams.to_vec()
 }
@@ -176,12 +169,12 @@ fn result(teams: &mut Vec<(String, Team)>) -> () {
     for (mascot, team) in teams.iter() {
         let sdelta: ColoredString;
         let sseed = format!("{}.", i);
-        let wl = format!("{}-{}", team.wins, team.losses);
+        let wlt = format!("{}-{}-{}", team.wins, team.losses, team.ties);
         let pfa = format!("{}-{}", team.pfor, team.pagainst);
-        let wpct = format!("% {:.3}", team.wins / (team.wins + team.losses));
+        let wpct = format!("% {:.3}", team.wins / (team.wins + team.losses + team.ties));
         let far = format!("F/A% {:.3}", team.pfor / team.pagainst);
         let ovr = format!("OVR: {:.1}", team.ovr);
-        let ppg = format!("PPG: {:.1}", team.pfor / (team.wins + team.losses));
+        let ppg = format!("PPG: {:.1}", team.pfor / (team.wins + team.losses + team.ties));
         let d = i - team.pseed;
         if team.pseed == 0 || d == 0 {
             sdelta = "(-)".normal();
@@ -191,7 +184,7 @@ fn result(teams: &mut Vec<(String, Team)>) -> () {
             sdelta = format!("(▼ {})", d).red();
         }
         // TODO: Replace hardcoded widths with variables based on max length of possible args
-        println!("{:<4} {:<20} {:<20} {:<12} {:<12} {:<12} {:<12} {:<12} {:<12} {:<12}", sseed.magenta(), team.name, mascot, sdelta, wl.blue(), pfa.blue(), wpct.cyan(), far.cyan(), ppg.cyan(), ovr.green());
+        println!("{:<4} {:<20} {:<20} {:<12} {:<16} {:<12} {:<12} {:<12} {:<12} {:<12}", sseed.magenta(), team.name, mascot, sdelta, wlt.blue(), pfa.blue(), wpct.cyan(), far.cyan(), ppg.cyan(), ovr.green());
         i += 1;
     }
 }
